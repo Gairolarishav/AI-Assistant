@@ -1,5 +1,5 @@
 # Ignore collected static files
-staticfiles/
+staticfiles
 
 # Ignore environment file
 .env
