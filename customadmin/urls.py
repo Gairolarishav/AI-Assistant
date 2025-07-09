@@ -24,8 +24,6 @@ urlpatterns = [
     path('', lambda request: redirect('/admin')),
     # path('admin/', admin.site.urls),  # ✅ Must include this line
     path('admin/', custom_admin_site.urls),
-    # path('retells/api/',include('retells.api_urls')),
-    # path('retells/',include('retells.urls')),
     path('fastpromos/',include('FastPromos.urls')),
     path('chat/',chatbot,name="chatbot"),
 ]
