@@ -407,7 +407,7 @@
 
     <script>
         // Configuration
-        const API_BASE_URL = 'http://localhost:8000/fastpromos';
+        const API_BASE_URL = 'https://fastcashpromo.onrender.com/fastpromos';
         const API_TOKEN = "{{ token }}";  // Replace with your DRF token
         let faqs = [];
         let editingFAQ = null;
@@ -718,7 +718,7 @@
                 const loader = document.getElementById('loader');
                 loader.style.display = 'block'; // Show loader
                 try {
-                    const response = await fetch('http://localhost:8000/fastpromos/upload-faqs/', {
+                    const response = await fetch('https://fastcashpromo.onrender.com/fastpromos/upload-faqs/', {
                         method: 'GET', // or 'POST' if your view only accepts POST
                         headers: {
                             'Content-Type': 'application/json',
