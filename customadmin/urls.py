@@ -17,13 +17,13 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path,include
 from django.shortcuts import redirect
-# from retells.admin import custom_admin_site
+from retells.admin import custom_admin_site
 from FastPromos.views import chatbot
 
 urlpatterns = [
     path('', lambda request: redirect('/admin')),
-    path('admin/', admin.site.urls),  # ✅ Must include this line
-    # path('admin/', custom_admin_site.urls),
+    # path('admin/', admin.site.urls),  # ✅ Must include this line
+    path('admin/', custom_admin_site.urls),
     # path('retells/api/',include('retells.api_urls')),
     # path('retells/',include('retells.urls')),
     path('fastpromos/',include('FastPromos.urls')),
