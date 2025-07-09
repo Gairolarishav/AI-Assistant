@@ -192,6 +192,16 @@ JAZZMIN_SETTINGS = {
     "order_with_respect_to": ["FastPromos.ChatConversations", "FastPromos.VoiceConversations", "FastPromos.QuoteRequest"],
     # Whether to show the UI customizer on the sidebar
     "show_ui_builder": False,
+    "icons": {
+        "FastPromos.ChatConversations": "fas fa-comments",
+        "FastPromos.VoiceConversations": "fas fa-phone-alt",
+        "FastPromos.QuoteRequest": "fas fa-receipt",
+        
+        # Alternative options (choose one set):
+        # "FastPromos.ChatConversations": "fas fa-message",
+        # "FastPromos.VoiceConversations": "fas fa-microphone",
+        
+    },
     
     # ChangeForm customizations
     "changeform_format": "horizontal_tabs",
