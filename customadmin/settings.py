@@ -41,7 +41,7 @@ CORS_ALLOW_ALL_ORIGINS = True # If this is used then `CORS_ALLOWED_ORIGINS` will
 CORS_ALLOW_CREDENTIALS = True
 
 CSRF_TRUSTED_ORIGINS = [
-    'https://e0a6871616d1.ngrok-free.app',
+    'https://fastcashpromo.onrender.com',
 ]
 # Application definition
 
