@@ -30,7 +30,7 @@
     function saveChat() {
       if (chatHistory.length === 0) return;
 
-      fetch('https://e0a6871616d1.ngrok-free.app/fastpromos/save-chat/', {
+      fetch('https://fastcashpromo.onrender.com/fastpromos/save-chat/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -47,9 +47,7 @@
 
       try {
         const parsed = JSON.parse(event.data);
-        console.log("parsed===", parsed)
         if (parsed.type === 'voiceflow:save_session') {
-          console.log('parsed.payload ==',parsed.payload)
           if (parsed.payload?.userID) {
             userID = parsed.payload.userID; // ✅ Save it
           }
@@ -91,7 +89,7 @@
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'hidden' && chatHistory.length > 0) {
         navigator.sendBeacon(
-          'https://e0a6871616d1.ngrok-free.app/fastpromos/save-chat/',
+          'https://fastcashpromo.onrender.com/fastpromos/save-chat/',
           new Blob([JSON.stringify({
             user_id: userID,  // ✅ Add here
             transcript: chatHistory
