@@ -16,6 +16,16 @@ table tbody tr td{
     white-space: nowrap !important;
 }
 
+.field-decoration_requested img{
+    width: 24px !important;
+    height: 24px !important;
+}
+
+.field-quote_requested img {
+    width: 24px !important;
+    height: 24px !important;
+}
+
 .brand-link .brand-image {
     float: left;
     line-height: 0;
