@@ -168,8 +168,9 @@ class VoiceConversationsAdmin(admin.ModelAdmin):
 @admin.register(QuoteRequest)
 class QuoteRequestAdmin(admin.ModelAdmin):
     list_display = (
-        'id', 'chat_id' ,'name', 'email', 'phone_no', 'quote_status',
-        'quantity', 'decoration_requested', 'created_at', 'updated_at'
+        'id', 'chat_id' ,'name', 'email', 'phone_no','post_code','product_name', 'quantity',
+        'decoration_requested','decoration_mode','color_size','delivery_time','quote_status',
+        'created_at', 'updated_at'
     )
     search_fields = ('id', 'name', 'email', 'phone_no')
     list_filter = ('quote_status', 'decoration_requested', 'created_at')
