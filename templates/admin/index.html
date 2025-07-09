@@ -4,7 +4,6 @@
 
 {% block extrahead %}
 {{ block.super }}
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
 <style>
 .metric-card {
@@ -89,79 +88,6 @@
     border-bottom: 1px solid #e2e8f0;
 }
 
-.activity-item {
-    padding: 12px 20px;
-    border-bottom: 1px solid #f1f5f9;
-    transition: background-color 0.3s ease;
-}
-
-.activity-item:hover {
-    background-color: #f8fafc;
-}
-
-.activity-item:last-child {
-    border-bottom: none;
-}
-
-.status-badge {
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    text-transform: uppercase;
-}
-
-.status-success { background-color: #dcfce7; color: #166534; }
-.status-danger { background-color: #fef2f2; color: #dc2626; }
-.status-warning { background-color: #fef3c7; color: #d97706; }
-.status-info { background-color: #dbeafe; color: #2563eb; }
-
-.chart-container {
-    position: relative;
-    height: 300px;
-    padding: 20px;
-}
-
-.agent-avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-weight: bold;
-    margin-right: 15px;
-}
-
-.progress-ring {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    background: conic-gradient(#4ade80 0deg, #4ade80 var(--progress, 0deg), #e5e7eb var(--progress, 0deg));
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-}
-
-.progress-ring::before {
-    content: '';
-    width: 45px;
-    height: 45px;
-    border-radius: 50%;
-    background: white;
-    position: absolute;
-}
-
-.progress-text {
-    position: relative;
-    z-index: 1;
-    font-weight: bold;
-    font-size: 0.8rem;
-}
-
 .real-time-indicator {
     width: 8px;
     height: 8px;
@@ -176,6 +102,39 @@
     50% { opacity: 0.5; }
 }
 
+.stats-summary {
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+}
+
+.stats-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #334155;
+    margin-bottom: 15px;
+}
+
+.welcome-message {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 20px;
+    border-radius: 15px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.welcome-message h1 {
+    margin: 0;
+    font-size: 1.8rem;
+}
+
+.welcome-message p {
+    margin: 5px 0 0 0;
+    opacity: 0.9;
+}
 </style>
 {% endblock %}
 
@@ -191,67 +150,130 @@
 
 {% block content %}
 <div class="container-fluid">
+    <!-- Welcome Message -->
+    <div class="welcome-message animate__animated animate__fadeInDown">
+        <h1>Welcome to Admin Dashboard</h1>
+        <p>Here's today's overview of Conversation, Quote Requests and Quote Request Sent</p>
+    </div>
+
     <!-- Key Metrics Row -->
     <div class="row mb-4">
-        <div class="col-lg-3 col-md-6">
+        <!-- Total Conversations Today -->
+        <div class="col-lg-4 col-md-6">
             <div class="metric-card success animate__animated animate__fadeInUp">
-                <div class="metric-icon"><i class="fas fa-users"></i></div>
-                <div class="metric-label">Total Conversations Today</div>
-                <div class="metric-number" data-count="{{ total_leads }}">0</div>
+                <div class="metric-icon"><i class="fas fa-comments"></i></div>
+                <div class="metric-label">Conversations Today</div>
+                <div class="metric-number" data-count="{{ total_conversations_today|default:0 }}">0</div>
                 <div class="growth-indicator">
-                    <i class="fas fa-arrow-up growth-up"></i> Active Pipeline
+                    <i class="fas fa-users"></i> Chat + Voice Combined
                 </div>
             </div>
         </div>
-        <div class="col-lg-3 col-md-6">
+
+        <!-- Quote Requests Today -->
+        <div class="col-lg-4 col-md-6">
             <div class="metric-card info animate__animated animate__fadeInUp" style="animation-delay: 0.1s">
-                <div class="metric-icon"><i class="fas fa-phone"></i></div>
+                <div class="metric-icon"><i class="fas fa-file-alt"></i></div>
                 <div class="metric-label">Quote Requests Today</div>
-                <div class="metric-number" data-count="{{ total_calls_today }}">0</div>
+                <div class="metric-number" data-count="{{ quote_requests_today|default:0 }}">0</div>
                 <div class="growth-indicator">
-                    {% if weekly_growth > 0 %}
-                        <i class="fas fa-arrow-up growth-up"></i> +{{ weekly_growth }}% from last week
-                    {% else %}
-                        <i class="fas fa-arrow-down growth-down"></i> {{ weekly_growth }}% from last week
-                    {% endif %}
+                    <i class="fas fa-clipboard-list"></i> New Requests
                 </div>
             </div>
         </div>
-        <div class="col-lg-3 col-md-6">
-            <div class="metric-card info animate__animated animate__fadeInUp" style="animation-delay: 0.1s">
-                <div class="metric-icon"><i class="fas fa-phone"></i></div>
-                <div class="metric-label">Quote Sent Today</div>
-                <div class="metric-number" data-count="{{ total_calls_today }}">0</div>
-                <div class="growth-indicator">
-                    {% if weekly_growth > 0 %}
-                        <i class="fas fa-arrow-up growth-up"></i> +{{ weekly_growth }}% from last week
-                    {% else %}
-                        <i class="fas fa-arrow-down growth-down"></i> {{ weekly_growth }}% from last week
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-        <!-- <div class="col-lg-3 col-md-6">
+
+        <!-- Quotes Sent Today -->
+        <div class="col-lg-4 col-md-6">
             <div class="metric-card warning animate__animated animate__fadeInUp" style="animation-delay: 0.2s">
-                <div class="metric-icon"><i class="fas fa-chart-line"></i></div>
-                <div class="metric-label">Success Rate</div>
-                <div class="metric-number" data-count="{{ success_rate }}">0</div>
+                <div class="metric-icon"><i class="fas fa-paper-plane"></i></div>
+                <div class="metric-label">Quotes Sent Today</div>
+                <div class="metric-number" data-count="{{ quotes_sent_today|default:0 }}">0</div>
                 <div class="growth-indicator">
-                    <i class="fas fa-percentage"></i> Today's Performance
+                    <i class="fas fa-check-circle"></i> Successfully Sent
                 </div>
             </div>
         </div>
-        <div class="col-lg-3 col-md-6">
-            <div class="metric-card primary animate__animated animate__fadeInUp" style="animation-delay: 0.3s">
-                <div class="metric-icon"><i class="fas fa-clock"></i></div>
-                <div class="metric-label">Avg Duration</div>
-                <div class="metric-number" data-count="{{ avg_duration_minutes }}">0</div>
-                <div class="growth-indicator">
-                    <i class="fas fa-stopwatch"></i> Minutes per call
+    </div>
+
+    <!-- Summary Statistics -->
+    <!-- <div class="row">
+        <div class="col-12">
+            <div class="stats-summary animate__animated animate__fadeInUp" style="animation-delay: 0.3s">
+                <div class="stats-title">
+                    <i class="fas fa-chart-line mr-2"></i>
+                    Today's Performance Summary
+                </div>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <h4 class="text-primary">{{ total_conversations_today|default:0 }}</h4>
+                            <p class="text-muted">Total Conversations</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <h4 class="text-info">{{ quote_requests_today|default:0 }}</h4>
+                            <p class="text-muted">Quote Requests</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <h4 class="text-warning">
+                                {% if quote_requests_today > 0 %}
+                                    {{ quotes_sent_today|default:0|floatformat:0 }}%
+                                {% else %}
+                                    0%
+                                {% endif %}
+                            </h4>
+                            <p class="text-muted">Conversion Rate</p>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div> -->
-    </div>
+        </div>
+    </div> -->
+
+    <!-- Quick Actions -->
+    <!-- <div class="row">
+        <div class="col-12">
+            <div class="dashboard-card animate__animated animate__fadeInUp" style="animation-delay: 0.4s">
+                <div class="card-header-custom">
+                    <h5 class="mb-0">
+                        <i class="fas fa-bolt mr-2"></i>
+                        Quick Actions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <a href="/admin/" class="btn btn-primary btn-block">
+                                <i class="fas fa-comments mr-2"></i>
+                                View Chat Conversations
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="/admin/" class="btn btn-success btn-block">
+                                <i class="fas fa-phone mr-2"></i>
+                                View Voice Conversations
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="/admin/" class="btn btn-info btn-block">
+                                <i class="fas fa-file-alt mr-2"></i>
+                                Manage Quote Requests
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="/admin/" class="btn btn-warning btn-block">
+                                <i class="fas fa-chart-bar mr-2"></i>
+                                View Reports
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div> -->
 </div>
 
 <script>
@@ -274,110 +296,22 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }, 16);
     });
-});
 
-// Daily Calls Chart
-const dailyCtx = document.getElementById('dailyCallsChart').getContext('2d');
-new Chart(dailyCtx, {
-    type: 'line',
-    data: {
-        labels: [{% for day in daily_calls %}'{{ day.date }}'{% if not forloop.last %},{% endif %}{% endfor %}],
-        datasets: [{
-            label: 'Calls',
-            data: [{% for day in daily_calls %}{{ day.count }}{% if not forloop.last %},{% endif %}{% endfor %}],
-            borderColor: 'rgb(102, 126, 234)',
-            backgroundColor: 'rgba(102, 126, 234, 0.1)',
-            tension: 0.4,
-            fill: true
-        }]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: {
-                display: false
-            }
-        },
-        scales: {
-            y: {
-                beginAtZero: true,
-                grid: {
-                    color: 'rgba(0,0,0,0.05)'
-                }
-            },
-            x: {
-                grid: {
-                    display: false
-                }
-            }
-        }
-    }
-});
-
-// Call Outcomes Chart
-const outcomesCtx = document.getElementById('callOutcomesChart').getContext('2d');
-new Chart(outcomesCtx, {
-    type: 'doughnut',
-    data: {
-        labels: [{% for outcome in call_outcomes %}'{{ outcome.disconnection_reason|default:"Unknown" }}'{% if not forloop.last %},{% endif %}{% endfor %}],
-        datasets: [{
-            data: [{% for outcome in call_outcomes %}{{ outcome.count }}{% if not forloop.last %},{% endif %}{% endfor %}],
-            backgroundColor: [
-                '#667eea', '#764ba2', '#11998e', '#38ef7d', '#f093fb', '#f5576c'
-            ],
-            borderWidth: 0
-        }]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: {
-                position: 'bottom'
-            }
-        }
-    }
-});
-
-// Real-time updates
-function updateDashboard() {
-    fetch('/admin/')
-        .then(response => response.json())
-        .then(data => {
-            // Update real-time activity
-            const activityContainer = document.getElementById('recentActivity');
-            // Add new activities to the top
-            data.recent_activity.forEach(activity => {
-                const existingItems = activityContainer.querySelectorAll('.activity-item');
-                if (existingItems.length >= 5) {
-                    existingItems[existingItems.length - 1].remove();
-                }
-                
-                const newItem = document.createElement('div');
-                newItem.className = 'activity-item animate__animated animate__fadeInDown';
-                newItem.innerHTML = `
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <div class="font-weight-bold">${activity.lead_name}</div>
-                            <small class="text-muted">Agent ${activity.agent_id} • ${activity.time}</small>
-                        </div>
-                        <div>
-                            <span class="status-badge status-${activity.status === 'ongoing' ? 'warning' : 'info'}">${activity.status}</span>
-                        </div>
-                    </div>
-                `;
-                activityContainer.insertBefore(newItem, activityContainer.firstChild);
-            });
+    // Add some interactive feedback
+    const metricCards = document.querySelectorAll('.metric-card');
+    metricCards.forEach(card => {
+        card.addEventListener('click', function() {
+            this.style.transform = 'scale(0.95)';
+            setTimeout(() => {
+                this.style.transform = '';
+            }, 150);
         });
-}
+    });
+});
 
-// Update every 30 seconds
-setInterval(updateDashboard, 30000);
-
-// Quick call function
-function startQuickCall() {
-    alert('Quick call feature - integrate with your calling system!');
-}
+// Auto-refresh dashboard every 5 minutes
+setInterval(function() {
+    location.reload();
+}, 300000);
 </script>
 {% endblock %}
