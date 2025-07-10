@@ -49,12 +49,12 @@ def quote_request(request):
             post_code=data.get("postcode", "").strip(),
             product_id=data.get("product_id", "").strip(),
             product_name=data.get("product_name", "").strip(),
-            quantity=int(data.get("quantity", "0").strip() or 0),
+            quantity=data.get("quantity", "0").strip(),
             decoration_requested=decoration_requested,
             decoration_mode=data.get("decoration_mode", "").strip(),
-            decoration_mode_id=int(data.get("decoration_mode_id", "0").strip() or 0),
+            decoration_mode_id=data.get("decoration_mode_id", "0").strip(),
             color_size=data.get("color_size", "").strip(),  # keep the typo if your model has it as `color_szie`
-            color_size_id=int(data.get("color_size_id", "0").strip() or 0),
+            color_size_id=data.get("color_size_id", "0").strip(),
             delivery_time=data.get("delivery_time", "").strip(),
         )
 
