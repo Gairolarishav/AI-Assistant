@@ -61,3 +61,8 @@ class FAQ(models.Model):
     
     def __str__(self):
         return f"FAQ: {self.question[:50]}..."
+
+class voiceflow_knowledgebase(models.Model):
+    document_id = models.CharField(max_length=255)
+    document_name = models.CharField(max_length=255)
+    row_count = models.CharField(max_length=255)
