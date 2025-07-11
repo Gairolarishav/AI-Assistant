@@ -53,8 +53,10 @@ def quote_request(request):
             decoration_requested=decoration_requested,
             decoration_mode=data.get("decoration_mode", "").strip(),
             decoration_mode_id=data.get("decoration_mode_id", "0").strip(),
-            color_size=data.get("color_size", "").strip(),  # keep the typo if your model has it as `color_szie`
-            color_size_id=data.get("color_size_id", "0").strip(),
+            logo_colours = data.get("logo_colours_count", "").strip(),
+            total_logos = data.get("logo_count", "").strip(),
+            colour_size=data.get("colour_size", "").strip(),  # keep the typo if your model has it as `color_szie`
+            colour_size_id=data.get("colour_size_id", "0").strip(),
             delivery_time=data.get("delivery_time", "").strip(),
         )
 
