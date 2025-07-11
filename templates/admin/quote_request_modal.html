@@ -24,19 +24,19 @@
         <h3 style="margin-bottom: 20px;">Quote Details</h3> <br>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
-            <div><strong>Name:</strong><br><span>{{ obj.name|default:"—" }}</span></div>
-            <div><strong>Email:</strong><br><span>{{ obj.email|default:"—" }}</span></div>
-            <div><strong>Phone No.:</strong><br><span>{{ obj.phone_no|default:"—" }}</span></div>
-            <div><strong>Post Code:</strong><br><span>{{ obj.post_code|default:"—" }}</span></div>
-            <div><strong>Product Name:</strong><br><span>{{ obj.product_name|default:"—" }}</span></div>
-            <div><strong>Decoration Requested:</strong><br><span>{% if obj.decoration_requested %}✅{% else %}❌{% endif %}</span></div>
-            <div><strong>Logo Colours:</strong><br><span>{{ obj.logo_colours|default:"—" }}</span></div>
-            <div><strong>Quantity:</strong><br><span>{{ obj.quantity|default:"—" }}</span></div>
-            <div><strong>Decoration Mode:</strong><br><span>{{ obj.decoration_mode|default:"—" }}</span></div>
-            <div><strong>Total Logos:</strong><br><span>{{ obj.total_logos|default:"—" }}</span></div>
-            <div><strong>Colour/Size:</strong><br><span>{{ obj.colour_size|default:"—" }}</span></div>
-            <div><strong>Delivery:</strong><br><span>{{ obj.delivery_time|default:"—" }}</span></div>
-            <div><strong>Status:</strong><br><span>{{ obj.quote_status|default:"N/A" }}</span></div>
+            <div><strong>Name:</strong><br><span style="white-space: normal;">{{ obj.name|default:"—" }}</span></div>
+            <div><strong>Email:</strong><br><span style="white-space: normal;">{{ obj.email|default:"—" }}</span></div>
+            <div><strong>Phone No.:</strong><br><span style="white-space: normal;">{{ obj.phone_no|default:"—" }}</span></div>
+            <div><strong>Post Code:</strong><br><span style="white-space: normal;">{{ obj.post_code|default:"—" }}</span></div>
+            <div><strong>Product Name:</strong><br><span style="white-space: normal;">{{ obj.product_name|default:"—" }}</span></div>
+            <div><strong>Decoration Requested:</strong><br><span style="white-space: normal;">{% if obj.decoration_requested %}✅{% else %}❌{% endif %}</span></div>
+            <div><strong>Logo Colours:</strong><br><span style="white-space: normal;">{{ obj.logo_colours|default:"—" }}</span></div>
+            <div><strong>Quantity:</strong><br><span style="white-space: normal;">{{ obj.quantity|default:"—" }}</span></div>
+            <div><strong>Decoration Mode:</strong><br><span style="white-space: normal;">{{ obj.decoration_mode|default:"—" }}</span></div>
+            <div><strong>Total Logos:</strong><br><span style="white-space: normal;">{{ obj.total_logos|default:"—" }}</span></div>
+            <div><strong>Colour/Size:</strong><br><span style="white-space: normal;">{{ obj.colour_size|default:"—" }}</span></div>
+            <div><strong>Delivery:</strong><br><span style="white-space: normal;">{{ obj.delivery_time|default:"—" }}</span></div>
+            <div><strong>Status:</strong><br><span style="white-space: normal;">{{ obj.quote_status|default:"N/A" }}</span></div>
         </div>
     </div>
 </div>
