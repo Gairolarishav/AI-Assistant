@@ -1,4 +1,4 @@
-<a href="javascript:void(0);" onclick="openModal('modal-{{ obj.id }}')" style="color:blue;">View More</a>
+<a href="javascript:void(0);" onclick="openModal('modal-{{ obj.id }}')" style="color:blue;">View Quote</a>
 
 <div id="modal-{{ obj.id }}" class="custom-modal" style="display:none; position:fixed; z-index:9999; left:0; top:0; width:100%; height:100%; overflow:auto; background-color: rgba(0,0,0,0.4);">
     <div style="
@@ -35,7 +35,7 @@
             <div><strong>Decoration Mode:</strong><br><span>{{ obj.decoration_mode|default:"—" }}</span></div>
             <div><strong>Total Logos:</strong><br><span>{{ obj.total_logos|default:"—" }}</span></div>
             <div><strong>Colour/Size:</strong><br><span>{{ obj.colour_size|default:"—" }}</span></div>
-            <div><strong>Delivery Time:</strong><br><span>{{ obj.delivery_time|default:"—" }}</span></div>
+            <div><strong>Delivery:</strong><br><span>{{ obj.delivery_time|default:"—" }}</span></div>
             <div><strong>Status:</strong><br><span>{{ obj.quote_status|default:"N/A" }}</span></div>
         </div>
     </div>
