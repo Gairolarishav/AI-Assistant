@@ -104,7 +104,7 @@ from django.urls import reverse
 class QuoteRequestAdmin(admin.ModelAdmin):
     list_display = (
         'id', 'chat_id_column' ,'name', 'email', 'phone_no','post_code','product_name', 'quantity',
-        'decoration_requested','decoration_mode','color_size','delivery_time','quote_status',
+        'decoration_requested','decoration_mode','logo_colours', 'total_logos','colour_size','delivery_time','quote_status',
         'created_at', 'updated_at'
     )
 
