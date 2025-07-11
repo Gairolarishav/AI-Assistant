@@ -145,7 +145,7 @@ class QuoteRequestAdmin(admin.ModelAdmin):
     
     def view_more_column(self, obj):
         return render_to_string("admin/quote_request_modal.html", {"obj": obj})
-    view_more_column.short_description = "More"
+    view_more_column.short_description = "Actions"
 
     def has_add_permission(self, request):
         return False  # no add, only edit existing
