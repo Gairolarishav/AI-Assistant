@@ -189,7 +189,7 @@ JAZZMIN_SETTINGS = {
     "custom_links": {},
     "custom_css": "admin/css/admin_custom.css",
     "hide_apps": ['auth','authtoken'],
-    "order_with_respect_to": ["FastPromos.ChatConversations", "FastPromos.VoiceConversations", "FastPromos.QuoteRequest"],
+    "order_with_respect_to": ["FastPromos.QuoteRequest","FastPromos.ChatConversations", "FastPromos.VoiceConversations"],
     # Whether to show the UI customizer on the sidebar
     "show_ui_builder": False,
     "icons": {
