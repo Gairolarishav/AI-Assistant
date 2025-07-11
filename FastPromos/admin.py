@@ -5,6 +5,7 @@ from django.utils import timezone
 from datetime import timedelta
 from django.contrib.auth.models import User, Group
 from django.contrib.auth.admin import UserAdmin, GroupAdmin
+from django.template.loader import render_to_string
 
 class MyAdminSite(admin.AdminSite):
 
