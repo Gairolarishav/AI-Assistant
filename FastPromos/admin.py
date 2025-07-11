@@ -103,9 +103,9 @@ from django.urls import reverse
 # @admin.register(QuoteRequest)
 class QuoteRequestAdmin(admin.ModelAdmin):
     list_display = (
-        'id', 'chat_id_column' ,'name', 'email', 'phone_no','post_code','product_name', 'quantity',
-        'decoration_requested','decoration_mode','logo_colours', 'total_logos','colour_size','delivery_time','quote_status',
-        'created_at', 'updated_at'
+        'id', 'chat_id_column' ,'name', 'email', 'phone_no','post_code','product_name',
+        'delivery_time','quote_status_badge','view_more_column', 
+        
     )
 
     list_display_links = ('chat_id_column',)  # Only 'name' will be clickable
@@ -123,6 +123,28 @@ class QuoteRequestAdmin(admin.ModelAdmin):
             return format_html('<a href="{}">{}</a>', url, obj.chat_id)
         return "-"
     chat_id_column.short_description = "Chat ID"
+
+    def quote_status_badge(self, obj):
+        status = obj.quote_status.lower()
+        colors = {
+            'pending': 'orange',
+            'approved': 'green',
+            'rejected': 'red',
+            'in progress': 'blue',
+            # add more statuses if needed
+        }
+        color = colors.get(status, 'gray')
+        return format_html(
+            '<span style="background-color:{}; color:white; padding:2px 6px; border-radius:4px; font-weight:bold;">{}</span>',
+            color,
+            obj.quote_status.capitalize()
+        )
+    quote_status_badge.short_description = "Quote Status"
+    quote_status_badge.admin_order_field = 'quote_status'
+    
+    def view_more_column(self, obj):
+        return render_to_string("admin/quote_request_modal.html", {"obj": obj})
+    view_more_column.short_description = "More"
 
     def has_add_permission(self, request):
         return False  # no add, only edit existing
