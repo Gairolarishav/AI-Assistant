@@ -34,9 +34,13 @@
     pointer-events: none;
 }
 
-.metric-card.success { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); }
+.metric-card.success {
+    background: linear-gradient(135deg, #44b5acf5 0%, #50db84 100%);
+}
 .metric-card.warning { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
-.metric-card.info { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+.metric-card.info {
+    background: linear-gradient(74deg, #64a2d9 0%, #45cdd4 100%);
+}
 .metric-card.primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
 
 .metric-number {
@@ -150,11 +154,6 @@
 
 {% block content %}
 <div class="container-fluid">
-    <!-- Welcome Message -->
-    <div class="welcome-message animate__animated animate__fadeInDown">
-        <h1>Welcome to Admin Dashboard</h1>
-        <p>Here's today's overview of Conversation, Quote Requests and Quote Request Sent</p>
-    </div>
 
     <!-- Key Metrics Row -->
     <div class="row mb-4">
@@ -165,7 +164,7 @@
                 <div class="metric-label">Conversations Today</div>
                 <div class="metric-number" data-count="{{ total_conversations_today|default:0 }}">0</div>
                 <div class="growth-indicator">
-                    <i class="fas fa-users"></i> Chat + Voice Combined
+                    <i class="fas fa-users"></i> Chat and voice combined
                 </div>
             </div>
         </div>
@@ -177,7 +176,7 @@
                 <div class="metric-label">Quote Requests Today</div>
                 <div class="metric-number" data-count="{{ quote_requests_today|default:0 }}">0</div>
                 <div class="growth-indicator">
-                    <i class="fas fa-clipboard-list"></i> New Requests
+                    <i class="fas fa-clipboard-list"></i> New requests sent
                 </div>
             </div>
         </div>
@@ -189,7 +188,7 @@
                 <div class="metric-label">Quotes Sent Today</div>
                 <div class="metric-number" data-count="{{ quotes_sent_today|default:0 }}">0</div>
                 <div class="growth-indicator">
-                    <i class="fas fa-check-circle"></i> Successfully Sent
+                    <i class="fas fa-check-circle"></i> Successfully sent
                 </div>
             </div>
         </div>
