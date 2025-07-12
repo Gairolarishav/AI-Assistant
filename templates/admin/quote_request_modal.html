@@ -1,7 +1,7 @@
 <a href="javascript:void(0);" onclick="openModal('modal-{{ obj.id }}')" style="color:blue;">View Quote</a>
 
 <div id="modal-{{ obj.id }}" class="custom-modal" style="display:none; position:fixed; z-index:9999; left:0; top:0; width:100%; height:100%; overflow:auto; background-color: rgba(0,0,0,0.4);">
-    <div style="
+    <div class="quote-modal-content" style="
         background-color:#fff; 
         margin:5% auto; 
         padding:20px; 
@@ -23,7 +23,7 @@
             ">&times;</span>
         <h3 style="margin-bottom: 20px;">Quote Details</h3> <br>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
+        <div class="quote-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
             <div><strong>Name:</strong><br><span style="white-space: normal;">{{ obj.name|default:"—" }}</span></div>
             <div><strong>Email:</strong><br><span style="white-space: normal;">{{ obj.email|default:"—" }}</span></div>
             <div><strong>Phone No.:</strong><br><span style="white-space: normal;">{{ obj.phone_no|default:"—" }}</span></div>
@@ -38,8 +38,142 @@
             <div><strong>Delivery:</strong><br><span style="white-space: normal;">{{ obj.delivery_time|default:"—" }}</span></div>
             <div><strong>Status:</strong><br><span style="white-space: normal;">{{ obj.quote_status|default:"N/A" }}</span></div>
         </div>
+
+        <div style="margin-top:30px; text-align:right;">
+            <button type="button" onclick="closeModal('modal-{{ obj.id }}')">Close</button>
+            <button type="button" id="generate-quote-btn-{{ obj.id }}" onclick="generateQuote('{{ obj.id }}')">Generate Quote</button>
+        </div>
     </div>
 </div>
+
+<div id="generated-quote-modal-{{ obj.id }}" class="custom-modal" style="display:none; position:fixed; z-index:10000; left:0; top:0; width:100%; height:100%; overflow:auto; background-color: rgba(0,0,0,0.4);">
+    <div class="generated-quote-modal-content" style="
+        background:#fff; 
+        margin:5% auto; 
+        padding:20px; 
+        border-radius:8px; 
+        width: 900px; 
+        max-width: 95%; 
+        position: relative; 
+        font-family: Arial, sans-serif;
+    ">
+        <span onclick="closeModal('generated-quote-modal-{{ obj.id }}')" style="position:absolute; top:10px; right:15px; color:#aaa; font-size:28px; font-weight:bold; cursor:pointer;">&times;</span>
+        <h3 style="margin-bottom: 20px;">Generated Quote</h3>
+
+        <div class="generated-quote-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
+            <div><strong>Base Unit Price:</strong><br><span id="base-unit-price-{{ obj.id }}">—</span></div>
+            <div><strong>Decoration Unit Price:</strong><br><span id="deco-unit-price-{{ obj.id }}">—</span></div>
+            <div><strong>Placements:</strong><br><span id="placements-{{ obj.id }}">—</span></div>
+            
+            <div><strong>Setup Fee:</strong><br><span id="setup-fee-{{ obj.id }}">—</span></div>
+            <div><strong>Decoration Cost Per Unit:</strong><br><span id="deco-cost-per-unit-{{ obj.id }}">—</span></div>
+            <div><strong>Setup Cost Total:</strong><br><span id="setup-cost-total-{{ obj.id }}">—</span></div>
+            
+            <div><strong>Decoration Total:</strong><br><span id="decoration-total-{{ obj.id }}">—</span></div>
+            <div><strong>All-in Unit Cost:</strong><br><span id="all-in-unit-cost-{{ obj.id }}">—</span></div>
+            <div><strong>Final Unit Price:</strong><br><span id="final-unit-price-{{ obj.id }}">—</span></div>
+            
+            <div><strong>Total Quote:</strong><br><span id="total-quote-{{ obj.id }}">—</span></div>
+            <div><strong>Quantity:</strong><br><span id="quantity-{{ obj.id }}">—</span></div>
+            <div><strong>Branding Applied:</strong><br><span id="branding-applied-{{ obj.id }}">—</span></div>
+        </div>
+
+        <div style="margin-top:30px; text-align:right;">
+            <button type="button" onclick="closeModal('generated-quote-modal-{{ obj.id }}')">Close</button>
+            <button type="button" onclick="approveAndSend('{{ obj.id }}')">Approve & Send</button>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Responsive styles for Quote Details Modal */
+    @media (max-width: 768px) {
+        .quote-modal-content {
+            width: 95% !important;
+            margin: 10% auto !important;
+            padding: 15px !important;
+        }
+        
+        .quote-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 15px !important;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .quote-modal-content {
+            margin: 5% auto !important;
+            padding: 10px !important;
+        }
+        
+        .quote-grid {
+            grid-template-columns: 1fr !important;
+            gap: 10px !important;
+        }
+    }
+    
+    /* Responsive styles for Generated Quote Modal */
+    @media (max-width: 1024px) {
+        .generated-quote-modal-content {
+            width: 95% !important;
+        }
+        
+        .generated-quote-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 15px !important;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .generated-quote-modal-content {
+            width: 95% !important;
+            margin: 10% auto !important;
+            padding: 15px !important;
+        }
+        
+        .generated-quote-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 15px !important;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .generated-quote-modal-content {
+            margin: 5% auto !important;
+            padding: 10px !important;
+        }
+        
+        .generated-quote-grid {
+            grid-template-columns: 1fr !important;
+            gap: 10px !important;
+        }
+    }
+    
+    /* Additional responsive improvements */
+    .custom-modal {
+        padding: 20px;
+        box-sizing: border-box;
+    }
+    
+    @media (max-width: 480px) {
+        .custom-modal {
+            padding: 10px;
+        }
+        
+        .quote-modal-content h3,
+        .generated-quote-modal-content h3 {
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+        
+        .quote-modal-content span[onclick],
+        .generated-quote-modal-content span[onclick] {
+            font-size: 24px !important;
+            top: 8px !important;
+            right: 12px !important;
+        }
+    }
+</style>
 
 <script>
     function openModal(id) {
@@ -47,5 +181,79 @@
     }
     function closeModal(id) {
         document.getElementById(id).style.display = "none";
+    }
+
+    function generateQuote(quoteId) {
+        const generateQuoteBtn = document.getElementById(`generate-quote-btn-${quoteId}`);
+        const originalText = generateQuoteBtn.innerText;
+        
+        // Show loading state
+        generateQuoteBtn.innerText = 'Generating...';
+        generateQuoteBtn.disabled = true;
+        generateQuoteBtn.style.opacity = '0.6';
+        generateQuoteBtn.style.cursor = 'not-allowed';
+        
+        const generateQuoteUrl = "{% url 'generate_quote' %}";
+        fetch(`${generateQuoteUrl}?id=${quoteId}`)
+            .then(response => response.json())
+            .then(data => {
+                console.log('data ===', data);
+                
+                // Reset button state
+                generateQuoteBtn.innerText = originalText;
+                generateQuoteBtn.disabled = false;
+                generateQuoteBtn.style.opacity = '1';
+                generateQuoteBtn.style.cursor = 'pointer';
+                
+                if (data.error) {
+                    alert(data.error);
+                    return;
+                }
+
+                document.getElementById(`base-unit-price-${quoteId}`).innerText = `${data.base_unit_price}`;
+                document.getElementById(`deco-unit-price-${quoteId}`).innerText = `${data.decoration_unit_price}`;
+                document.getElementById(`placements-${quoteId}`).innerText = data.placements;
+                document.getElementById(`setup-fee-${quoteId}`).innerText = `${data.setup_fee}`;
+                document.getElementById(`deco-cost-per-unit-${quoteId}`).innerText = `${data.deco_cost_per_unit}`;
+                document.getElementById(`setup-cost-total-${quoteId}`).innerText = `${data.setup_cost_total}`;
+                document.getElementById(`decoration-total-${quoteId}`).innerText = `${data.decoration_total}`;
+                document.getElementById(`all-in-unit-cost-${quoteId}`).innerText = `${data.all_in_unit_cost}`;
+                document.getElementById(`final-unit-price-${quoteId}`).innerText = `${data.final_unit_price}`;
+                document.getElementById(`total-quote-${quoteId}`).innerText = `${data.total_quote}`;
+                document.getElementById(`quantity-${quoteId}`).innerText = data.quantity;
+                document.getElementById(`branding-applied-${quoteId}`).innerText = data.branding_applied ? 'Yes' : 'No';
+
+                openModal(`generated-quote-modal-${quoteId}`);
+            })
+            .catch(err => {
+                console.error(err);
+                
+                // Reset button state on error
+                generateQuoteBtn.innerText = originalText;
+                generateQuoteBtn.disabled = false;
+                generateQuoteBtn.style.opacity = '1';
+                generateQuoteBtn.style.cursor = 'pointer';
+                
+                alert('Something went wrong.');
+            });
+    }
+
+    function approveAndSend(quoteId) {
+        // Example: send POST to your approve endpoint
+        fetch(`/approve-quote/`, {
+            method: "POST",
+            headers: {'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}'},
+            body: JSON.stringify({ id: quoteId })
+        })
+        .then(response => response.json())
+        .then(data => {
+            alert('Quote approved and sent!');
+            closeModal(`generated-quote-modal-${quoteId}`);
+            closeModal(`modal-${quoteId}`);
+        })
+        .catch(err => {
+            console.error(err);
+            alert('Something went wrong.');
+        });
     }
 </script>
