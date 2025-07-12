@@ -354,8 +354,8 @@ def generate_quote(request):
 
         wc_url = f"https://fastpromos.com.au/wp-json/wc/v3/products/{product_id}"
         params = {
-            "consumer_key": "ck_e09f6c58914214b8eaa293bc43ae95a51fc2f889",
-            "consumer_secret": "cs_34bc648cbce3c811bf1309c6197da57e82e6f91b"
+            "consumer_key": settings.CONSUMER_KEY,
+            "consumer_secret": settings.CONSUMER_SECRET
         }
 
         response = requests.get(wc_url, params=params)
