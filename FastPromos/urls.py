@@ -1,5 +1,5 @@
 from django.urls import path,include
-from .views import quote_request ,add_faqs,upload_faqs_to_voiceflow,FAQViewSet,save_chat,chatbot,get_transcript
+from .views import quote_request ,add_faqs,upload_faqs_to_voiceflow,FAQViewSet,save_chat,chatbot,get_transcript,generate_quote
 from rest_framework.routers import DefaultRouter
 
 router = DefaultRouter()
