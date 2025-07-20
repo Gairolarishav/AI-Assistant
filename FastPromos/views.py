@@ -387,34 +387,48 @@ def fetch_voiceflow_ready_products(request):
         }
 
     # === Pagination Fetch ===
-    all_products = []
     page = 1
-    while True:
-        url = f"https://fastpromos.com.au/wp-json/wc/v3/products?page={page}&per_page=100"
-        consumer_key = settings.CONSUMER_KEY
-        consumer_secret = settings.CONSUMER_SECRET
+    total = 0
+    first = True
 
-        response = requests.get(url, auth=HTTPBasicAuth(consumer_key, consumer_secret))
-        if response.status_code != 200:
-            return JsonResponse({'error': f'HTTP {response.status_code}'}, status=response.status_code)
+    file_path = "/tmp/products.json"
 
-        page_products = response.json()
-        if not page_products:
-            break  # End loop when no products returned
+    with open(file_path, "w") as f:
+        f.write("[")
+        while True:
+            url = f"https://fastpromos.com.au/wp-json/wc/v3/products?page={page}&per_page=100"
+            response = requests.get(url, auth=HTTPBasicAuth(settings.CONSUMER_KEY, settings.CONSUMER_SECRET))
 
-        all_products.extend([clean_product(p) for p in page_products])
-        print(f'data of page {page}')
-        page += 1
+            if response.status_code != 200:
+                return JsonResponse({"error": f"HTTP {response.status_code}"}, status=response.status_code)
 
+            page_products = response.json()
+            if not page_products:
+                break
 
-    upload_to_voiceflow_table(all_products,VOICEFLOW_API_KEY)
+            for p in page_products:
+                cleaned = clean_product(p)
+                if not first:
+                    f.write(",\n")
+                else:
+                    first = False
+                f.write(json.dumps(cleaned))
+                total += 1
+
+            page += 1
+
+        f.write("]")
+
+    # ✅ File saved — now open & upload
+    with open(file_path, "r") as f:
+        products_data = json.load(f)
+        upload_result = upload_to_voiceflow_table(products_data, VOICEFLOW_API_KEY)
 
     return JsonResponse({
-        "name": "FastPromos Products",
-        "type": "table",
-        "data": "uploaded successfully",
-        "total": len(all_products)
-    }, safe=False)
+        "message": "Done",
+        "total": total,
+        "upload_result": upload_result
+    })
 
 def delete_voiceflow_document(document_id, voiceflow_api_key):
     """Delete a document from Voiceflow using document ID"""
