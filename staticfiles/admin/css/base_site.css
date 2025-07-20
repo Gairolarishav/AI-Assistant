@@ -188,7 +188,7 @@
   animation: fadeIn 0.3s ease;
 }
 
-.chat-message.agent {
+.chat-message.assistant {
   align-self: flex-start;
   background: #ffffff;
   color: #333;
@@ -200,6 +200,13 @@
   background: #dcf8c6;
   color: #1a1a1a;
   border-bottom-right-radius: 0;
+}
+
+.chat-message.session-separator {
+  box-shadow: none;
+  text-align: center;
+  max-width: 100%;
+  color: #747272;
 }
 
 /* Animation */
