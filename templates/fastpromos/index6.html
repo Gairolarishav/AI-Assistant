@@ -17,7 +17,7 @@
     let userID = null;
 
     window.voiceflow.chat.load({
-      verify: { projectID: '686f4f3b68ecad52b63b23f9' },
+      verify: { projectID: '68788f63afad161a491c31e4' },
       url: 'https://general-runtime.voiceflow.com',
       versionID: 'production',
       assistant: { persistence: 'memory' },
@@ -45,11 +45,13 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          user_id: userID,  // ✅ Add here
+          user_id: userID,
           transcript: chatHistory
         })
       }).then(() => {
         console.log('✅ Chat saved:', chatHistory.length, 'turns');
+      }).catch(error => {
+        console.error('❌ Failed to save chat:', error);
       });
     }
 
@@ -58,10 +60,16 @@
 
       try {
         const parsed = JSON.parse(event.data);
-        if (parsed.type === 'voiceflow:save_session') {
+        console.log("parsed===", parsed);
+        console.log("chatHistory ===", chatHistory);
+        
+        if (parsed.type === 'voiceflow:save_session' && parsed.payload.status === "ACTIVE") {
+          console.log('parsed.payload ==', parsed.payload);
+          
           if (parsed.payload?.userID) {
-            userID = parsed.payload.userID; // ✅ Save it
+            userID = parsed.payload.userID;
           }
+          
           const turns = parsed.payload?.turns || [];
           if (turns.length > lastSavedTurnCount) {
             const newTurns = turns.slice(lastSavedTurnCount);
@@ -92,17 +100,47 @@
             }
           }
         }
+        else if (parsed.type === 'voiceflow:close') {
+          // ✅ FIXED: Just add a session separator, don't clear history
+          if (chatHistory.length > 0) {
+            chatHistory.push({
+              source: 'system',
+              text: '------ New Chat Session Started ------',
+              timestamp: Date.now()
+            });
+          }
+          
+          // Reset turn count for new session but keep chat history
+          lastSavedTurnCount = 0;
+          
+          console.log('🔄 New session started - continuing chat history');
+        }
+
       } catch (e) {
         console.warn('Failed to parse Voiceflow event:', e);
       }
     });
 
+    // Save chat when page is about to be hidden/closed
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'hidden' && chatHistory.length > 0) {
         navigator.sendBeacon(
           'https://fastcashpromo.onrender.com/fastpromos/save-chat/',
           new Blob([JSON.stringify({
-            user_id: userID,  // ✅ Add here
+            user_id: userID,
+            transcript: chatHistory
+          })], { type: 'application/json' })
+        );
+      }
+    });
+
+    // Additional safety: Save on window beforeunload
+    window.addEventListener('beforeunload', () => {
+      if (chatHistory.length > 0) {
+        navigator.sendBeacon(
+          'https://fastcashpromo.onrender.com/fastpromos/save-chat/',
+          new Blob([JSON.stringify({
+            user_id: userID,
             transcript: chatHistory
           })], { type: 'application/json' })
         );
@@ -111,9 +149,9 @@
 
   };
   v.src = "https://cdn.voiceflow.com/widget-next/bundle.mjs";
-  v.type = "text/javascript"; s.parentNode.insertBefore(v, s);
+  v.type = "text/javascript"; 
+  s.parentNode.insertBefore(v, s);
 })(document, 'script');
 </script>
-
 </body>
 </html>
