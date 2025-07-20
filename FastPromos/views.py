@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from .models import QuoteRequest,ChatConversations,VoiceConversations,FAQ
+from .models import QuoteRequest,ChatConversations,VoiceConversations,FAQ,voiceflow_knowledgebase
 from django.http import JsonResponse
 import json
 from django.views.decorators.http import require_POST
@@ -329,6 +329,220 @@ def upload_faqs_to_voiceflow(request):
 
     except Exception as e:
         return JsonResponse({"success": False, "message": "Something went wrong", "error": str(e)}, status=500)
+
+
+@csrf_exempt
+def fetch_voiceflow_ready_products(request):
+    import re
+    from requests.auth import HTTPBasicAuth
+
+    def strip_html(text):
+        return re.sub('<[^<]+?>', '', text or '').strip()
+
+    def get_meta(product, key):
+        for item in product.get("meta_data", []):
+            if item.get("key") == key:
+                return item.get("value")
+        return None
+
+    def clean_product(product):
+        do_costs = [
+            cost for cost in (get_meta(product, "fp_additional_costs") or [])
+            if cost.get("type") == "DO"
+        ]
+
+        return {
+            "Product ID": product.get("id"),
+            "Sku": product.get("sku"),
+            "Product Name": product.get("name"),
+            "Product Url": product.get("permalink"),
+            "Short Description": strip_html(product.get("short_description")),
+            "Regular Price": product.get("regular_price"),
+            "Categories": ", ".join([cat["name"] for cat in product.get("categories", [])]),
+            # "Image URLs": "\n".join([img["src"] for img in product.get("images", [])]),
+            "Packaging": get_meta(product, "fp_packaging") or "N/A",
+            "Features": "\n".join(f"- {f}" for f in get_meta(product, "fp_features") or []),
+            "Specifications": "\n".join(
+                f"- {s['specification']}: {s['description']}"
+                for s in get_meta(product, "fp_specifications") or []
+            ),
+            "Materials": "\n".join(
+                f"- {m['component'] + ': ' if m.get('component') else ''}{m['material']}"
+                for m in get_meta(product, "fp_materials") or []
+            ),
+            "Pricing (Unbranded)": "\n".join(
+                f"- {qty}+ units: ${price}"
+                for qty, price in (get_meta(product, "fp_pricing") or {}).items()
+            ),
+            "Minimum Order Quantity (MOQ)": get_meta(product, "fp_moq") or "N/A",
+            "Branding Options": "\n\n".join([
+                f"Option {i+1}:\n" + "\n".join([f"- {k.replace('_', ' ')}: {v}" for k, v in opt.items()])
+                for i, opt in enumerate(do_costs)
+            ]) or "N/A",
+            "Stock Availability": "\n".join([
+                f"- ID: {v.get('stock_code', 'N/A')} | {v['description']}: {v['quantity']} units"
+                + (f" (Next shipment: {v['next_shipment']}, Due: {v['due_date']})" if v.get("next_shipment") else "")
+                for v in (get_meta(product, "fp_stocks") or {}).values()
+            ])
+        }
+
+    # === Pagination Fetch ===
+    all_products = []
+    page = 1
+    while True:
+        url = f"https://fastpromos.com.au/wp-json/wc/v3/products?page={page}&per_page=100"
+        consumer_key = settings.CONSUMER_KEY
+        consumer_secret = settings.CONSUMER_SECRET
+
+        response = requests.get(url, auth=HTTPBasicAuth(consumer_key, consumer_secret))
+        if response.status_code != 200:
+            return JsonResponse({'error': f'HTTP {response.status_code}'}, status=response.status_code)
+
+        page_products = response.json()
+        if not page_products:
+            break  # End loop when no products returned
+
+        all_products.extend([clean_product(p) for p in page_products])
+        print(f'data of page {page}')
+        page += 1
+
+
+    upload_to_voiceflow_table(all_products,VOICEFLOW_API_KEY)
+
+    return JsonResponse({
+        "name": "FastPromos Products",
+        "type": "table",
+        "data": all_products,
+        "total": len(all_products)
+    }, safe=False)
+
+def delete_voiceflow_document(document_id, voiceflow_api_key):
+    """Delete a document from Voiceflow using document ID"""
+    url = f"https://api.voiceflow.com/v1/knowledge-base/docs/{document_id}"
+    headers = {
+        "accept": "application/json",
+        "Authorization": f"{voiceflow_api_key}"
+    }
+    
+    response = requests.delete(url, headers=headers)
+    print(f"Delete response status: {response.status_code}")
+    print(f"Delete response: {response.text}")
+    
+    return response.status_code == 200
+
+def upload_to_voiceflow_table(products_data, voiceflow_api_key):
+    import json
+    from .models import voiceflow_knowledgebase  # Adjust import path as needed
+
+    document_name = "FastPromos Products"
+    
+    # Step 1: Check if document exists in database and delete from Voiceflow
+    try:
+        existing_doc = voiceflow_knowledgebase.objects.get(document_name=document_name)
+        print(f"Found existing document: {existing_doc.document_id}")
+        
+        # Delete from Voiceflow
+        delete_success = delete_voiceflow_document(existing_doc.document_id, voiceflow_api_key)
+        if delete_success:
+            print(f"Successfully deleted document {existing_doc.document_id} from Voiceflow")
+            print("Will update database record with new document ID after upload")
+        else:
+            print(f"Failed to delete document {existing_doc.document_id} from Voiceflow")
+    except voiceflow_knowledgebase.DoesNotExist:
+        print("No existing document found in database")
+    except Exception as e:
+        print(f"Error during deletion: {e}")
+
+    # Step 2: Clean up data
+    for item in products_data:
+        for key, val in item.items():
+            if isinstance(val, (dict, list)):
+                item[key] = json.dumps(val)[:1000]  # Truncate if huge
+            elif val is None:
+                item[key] = ""
+            elif not isinstance(val, str):
+                item[key] = str(val)
+
+    # Step 3: Upload new document
+    url = "https://api.voiceflow.com/v1/knowledge-base/docs/upload/table"
+    payload = {
+        "data": {
+            "name": document_name,
+            "schema": {
+                "searchableFields": [
+                    "Product Name","Sku","Short Description","Categories","Features",
+                    "Materials","Pricing (Unbranded)",
+                ],
+                "metadataFields": [
+                    "Product ID","Product Url", "Short Description","Regular Price",
+                    "Packaging", "Materials", "Specifications","Features",
+                    "Pricing (Unbranded)", "Minimum Order Quantity (MOQ)",
+                    "Branding Options", "Stock Availability"
+                ]
+            },
+            "items": products_data
+        }
+    }
+
+    headers = {
+        "accept": "application/json",
+        "content-type": "application/json",
+        "Authorization": f"{voiceflow_api_key}"
+    }
+
+    # No overwrite parameter needed since we deleted manually
+    response = requests.post(url, headers=headers, json=payload)
+
+    print("Request Payload Preview:")
+    print("Status:", response.status_code)
+    print("Response:", response.text)
+    
+    # Step 4: Save new document ID to database
+    try:
+        response_data = response.json()
+        if response.status_code == 200 and "data" in response_data:
+            document_id = response_data["data"]["documentID"]
+            row_count = response_data["data"]["data"]["rowsCount"]
+            
+            # Check if document exists and update, otherwise create new
+            try:
+                existing_doc = voiceflow_knowledgebase.objects.get(document_name=document_name)
+                existing_doc.document_id = document_id
+                existing_doc.row_count = row_count
+                existing_doc.save()
+                print(f"Updated existing database record with new document ID: {document_id}")
+            except voiceflow_knowledgebase.DoesNotExist:
+                # Create new record if none exists
+                voiceflow_knowledgebase.objects.create(
+                    document_id=document_id,
+                    document_name=document_name,
+                    row_count= row_count
+                )
+                print(f"Created new database record: {document_id}")
+            
+            print(f"Uploaded {row_count} rows successfully")
+            
+            return {
+                "success": True,
+                "document_id": document_id,
+                "rows_count": row_count,
+                "message": "Upload successful"
+            }
+        else:
+            print(f"Upload failed: {response_data}")
+            return {
+                "success": False,
+                "error": response_data,
+                "message": "Upload failed"
+            }
+    except Exception as e:
+        print(f"Failed to parse JSON or save to database: {e}")
+        return {
+            "success": False,
+            "error": str(e),
+            "message": "Failed to process response"
+        }
+    
 
 import requests
 from decimal import Decimal, ROUND_HALF_UP
