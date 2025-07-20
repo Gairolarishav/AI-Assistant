@@ -9,6 +9,7 @@ urlpatterns = [
     path('save-chat/', save_chat, name='save-chat'),
     path('add-faqs/', add_faqs, name='add_faqs'),
     path('upload-faqs/', upload_faqs_to_voiceflow, name='upload_faqs_to_voiceflow'),
+    path('upload-product-data/', fetch_voiceflow_ready_products),
     path('quote-request/', quote_request, name='quote_request'),
     path('generate-quote/', generate_quote, name='generate_quote'),
     path('', include(router.urls)),
