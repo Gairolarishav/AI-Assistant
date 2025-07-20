@@ -412,7 +412,7 @@ def fetch_voiceflow_ready_products(request):
     return JsonResponse({
         "name": "FastPromos Products",
         "type": "table",
-        "data": all_products,
+        "data": "uploaded successfully",
         "total": len(all_products)
     }, safe=False)
 
