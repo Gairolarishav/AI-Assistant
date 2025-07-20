@@ -36,8 +36,16 @@ function displayTranscript(transcript) {
 
   transcript.forEach(entry => {
     const msgDiv = document.createElement("div");
-    msgDiv.className = `chat-message ${entry.source}`;
-    msgDiv.textContent = entry.text;
+    
+    // ✅ Check if this is a session separator message
+    if (entry.source === 'system' && entry.text.includes('New Chat Session Started')) {
+      msgDiv.className = 'chat-message session-separator';
+      msgDiv.textContent = entry.text;
+    } else {
+      msgDiv.className = `chat-message ${entry.source}`;
+      msgDiv.textContent = entry.text;
+    }
+    
     contentContainer.appendChild(msgDiv);
   });
 }
@@ -45,5 +53,5 @@ function displayTranscript(transcript) {
 function closeTranscriptPanel() {
   const panel = document.getElementById("transcriptPanel");
   panel.classList.remove("show");
-  setTimeout(() => (panel.style.display = "none"), 300);
+  setTimeout(() => panel.style.display = "none", 300);
 }
