@@ -1,0 +1,127 @@
+<a href="javascript:void(0);" onclick="openModal('quotationmodal-{{ obj.id }}')" style="color:blue;">View Quotation</a>
+
+<div id="quotationmodal-{{ obj.id }}" class="custom-modal" style="display:none; position:fixed; z-index:9999; left:0; top:0; width:100%; height:100%; overflow:auto; background-color: rgba(0,0,0,0.4);">
+    <div class="quote-modal-content" style="
+        background-color:#fff; 
+        margin:5% auto; 
+        padding:20px; 
+        border-radius:8px; 
+        width: 700px; 
+        max-width: 95%;
+        position: relative;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    ">
+        <span onclick="closeModal('quotationmodal-{{ obj.id }}')" 
+            style="
+                position:absolute; 
+                top:10px; 
+                right:15px; 
+                color:#aaa; 
+                font-size:28px; 
+                font-weight:bold; 
+                cursor:pointer;
+            ">&times;</span>
+        <h3 style="margin-bottom: 20px;">Quotation</h3>
+        <div id="quotation-details-{{ obj.id }}">
+        Loading quotation details...
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Responsive styles for Quote Details Modal */
+    @media (max-width: 768px) {
+        .quote-modal-content {
+            width: 95% !important;
+            margin: 10% auto !important;
+            padding: 15px !important;
+        }
+        
+        .quote-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 15px !important;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .quote-modal-content {
+            margin: 5% auto !important;
+            padding: 10px !important;
+        }
+        
+        .quote-grid {
+            grid-template-columns: 1fr !important;
+            gap: 10px !important;
+        }
+    }
+    
+    /* Additional responsive improvements */
+    .custom-modal {
+        padding: 20px;
+        box-sizing: border-box;
+    }
+    
+    @media (max-width: 480px) {
+        .custom-modal {
+            padding: 10px;
+        }
+        
+        .quote-modal-content h3{
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+        
+        .quote-modal-content span[onclick] {
+            font-size: 24px !important;
+            top: 8px !important;
+            right: 12px !important;
+        }
+    }
+</style>
+
+<script>
+    function openModal(id) {
+  document.getElementById(id).style.display = "block";
+
+  // If it's the quote request modal, fetch the quotation details
+  if (id.startsWith('quotationmodal-')) {
+    const quoteRequestId = id.split('-')[1];
+    const container = document.getElementById(`quotation-details-${quoteRequestId}`);
+    container.innerHTML = "Loading...";
+
+    fetch(`/fastpromos/get-quotation-details/?quote_request_id=${quoteRequestId}`)
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          container.innerHTML = `
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
+              <div><strong>Quotation Number:</strong><br>${data.quote_number}</div>
+              <div><strong>Product:</strong><br>${data.product}</div>
+              <div><strong>Quantity:</strong><br>${data.quantity}</div>
+              <div><strong>Decoration Mode:</strong><br>${data.decoration_mode}</div>
+              <div><strong>Colour:</strong><br>${data.colour}</div>
+              <div><strong>Base Unit Price:</strong><br>${data.base_unit_price}</div>
+              <div><strong>Decoration Unit Price:</strong><br>${data.decoration_unit_price}</div>
+              <div><strong>Placements:</strong><br>${data.placements}</div>
+              <div><strong>Setup Fee:</strong><br>${data.setup_fee}</div>
+              <div><strong>Decoration Total:</strong><br>${data.decoration_total}</div>
+              <div><strong>All-in Unit Cost:</strong><br>${data.all_in_unit_cost}</div>
+              <div><strong>Final Unit Price:</strong><br>${data.final_unit_cost}</div>
+              <div><strong>Total Cost:</strong><br>${data.total_cost}</div>
+            </div>
+          `;
+        } else {
+          container.innerHTML = "No Quotation found.";
+        }
+      })
+      .catch(err => {
+        container.innerHTML = "Error loading quotation.";
+      });
+  }
+}
+
+    function closeModal(id) {
+        document.getElementById(id).style.display = "none";
+    }
+
+</script>
