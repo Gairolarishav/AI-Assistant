@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import ChatConversations, VoiceConversations, QuoteRequest
+from .models import ChatConversations, VoiceConversations, QuoteRequest,voiceflow_knowledgebase,Quotation
 from django.utils.html import format_html
 from django.utils import timezone
 from datetime import timedelta
@@ -7,6 +7,7 @@ from django.contrib.auth.models import User, Group
 from django.contrib.auth.admin import UserAdmin, GroupAdmin
 from django.template.loader import render_to_string
 from django.urls import reverse
+from .views import create_quotation_from_request
 
 class MyAdminSite(admin.AdminSite):
 
