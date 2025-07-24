@@ -690,94 +690,115 @@ def generate_quote(request):
             quote = QuoteRequest.objects.get(id=int(quote_id))
         except QuoteRequest.DoesNotExist:
             return JsonResponse({"error": "Quote not found"}, status=404)
+        
+        if quote.quote_status == 'not generated':
 
-        product_id = quote.product_id
-        quantity = int(quote.quantity or 0)
-        logo_colours = int(quote.logo_colours or 0)
-        total_logos = int(quote.total_logos or 0)
-        decoration_mode_id = int(quote.decoration_mode_id or 0)
+            product_id = quote.product_id
+            quantity = int(quote.quantity or 0)
+            logo_colours = int(quote.logo_colours or 0)
+            total_logos = int(quote.total_logos or 0)
+            decoration_mode_id = int(quote.decoration_mode_id or 0)
 
-        print(f"[DEBUG] product_id={product_id}, quantity={quantity}, logo_colours={logo_colours}, total_logos={total_logos}, decoration_mode_id={decoration_mode_id}")
+            print(f"[DEBUG] product_id={product_id}, quantity={quantity}, logo_colours={logo_colours}, total_logos={total_logos}, decoration_mode_id={decoration_mode_id}")
 
-        wc_url = f"https://fastpromos.com.au/wp-json/wc/v3/products/{product_id}"
-        params = {
-        "consumer_key": "ck_e09f6c58914214b8eaa293bc43ae95a51fc2f889",
-        "consumer_secret": "cs_34bc648cbce3c811bf1309c6197da57e82e6f91b"
-        }
+            wc_url = f"https://fastpromos.com.au/wp-json/wc/v3/products/{product_id}"
+            params = {
+            "consumer_key": "ck_e09f6c58914214b8eaa293bc43ae95a51fc2f889",
+            "consumer_secret": "cs_34bc648cbce3c811bf1309c6197da57e82e6f91b"
+            }
 
-        response = requests.get(wc_url, params=params)
-        if response.status_code != 200:
-            return JsonResponse({"error": f"Error fetching product data. Status: {response.status_code}"}, status=500)
+            response = requests.get(wc_url, params=params)
+            if response.status_code != 200:
+                return JsonResponse({"error": f"Error fetching product data. Status: {response.status_code}"}, status=500)
 
-        product_data = response.json()
-        meta_data = product_data.get("meta_data", [])
+            product_data = response.json()
+            meta_data = product_data.get("meta_data", [])
 
-        fp_pricing = None
-        fp_additional_costs = None
+            fp_pricing = None
+            fp_additional_costs = None
 
-        for meta in meta_data:
-            if meta.get("key") == "fp_pricing":
-                fp_pricing = meta.get("value")
-            if meta.get("key") == "fp_additional_costs":
-                fp_additional_costs = meta.get("value")
+            for meta in meta_data:
+                if meta.get("key") == "fp_pricing":
+                    fp_pricing = meta.get("value")
+                if meta.get("key") == "fp_additional_costs":
+                    fp_additional_costs = meta.get("value")
 
-        if not fp_pricing:
-            return JsonResponse({"error": "No pricing found in product metadata."}, status=500)
+            if not fp_pricing:
+                return JsonResponse({"error": "No pricing found in product metadata."}, status=500)
 
-        unit_price = None
-        breaks = sorted(map(int, fp_pricing.keys()))
-        for b in breaks:
-            if quantity >= b:
-                unit_price = Decimal(str(fp_pricing[str(b)]))
-        if not unit_price:
-            unit_price = Decimal(str(fp_pricing[str(breaks[0])]))
+            unit_price = None
+            breaks = sorted(map(int, fp_pricing.keys()))
+            for b in breaks:
+                if quantity >= b:
+                    unit_price = Decimal(str(fp_pricing[str(b)]))
+            if not unit_price:
+                unit_price = Decimal(str(fp_pricing[str(breaks[0])]))
 
-        # Branding logic
-        if quote.decoration_requested and decoration_mode_id:
-            selected_deco = next(
-                (deco for deco in fp_additional_costs if deco["id"] == decoration_mode_id),
-                None
-            )
-            if not selected_deco:
-                return JsonResponse({"error": "No matching decoration option found."}, status=500)
+            # Branding logic
+            if quote.decoration_requested and decoration_mode_id:
+                selected_deco = next(
+                    (deco for deco in fp_additional_costs if deco["id"] == decoration_mode_id),
+                    None
+                )
+                if not selected_deco:
+                    return JsonResponse({"error": "No matching decoration option found."}, status=500)
 
-            deco_unit_price = Decimal(str(selected_deco["unit_price"]))
-            setup_fee = Decimal(str(selected_deco["setup"]))
+                deco_unit_price = Decimal(str(selected_deco["unit_price"]))
+                setup_fee = Decimal(str(selected_deco["setup"]))
 
-            placements = logo_colours * total_logos
-            # Better fallback: if no colour given, but logos exist, assume 1 colour
-            if placements == 0 and total_logos > 0:
-                placements = total_logos
+                placements = logo_colours * total_logos
+                # Better fallback: if no colour given, but logos exist, assume 1 colour
+                if placements == 0 and total_logos > 0:
+                    placements = total_logos
 
-            # Or safer: default to 1 only if both are zero
-            if placements == 0:
-                placements = 1
+                # Or safer: default to 1 only if both are zero
+                if placements == 0:
+                    placements = 1
 
-            deco_cost_per_unit = deco_unit_price * placements
-            setup_cost_total = setup_fee * placements
+                deco_cost_per_unit = deco_unit_price * placements
+                setup_cost_total = setup_fee * placements
 
-            decoration_total = (deco_cost_per_unit * quantity) + setup_cost_total
-            decoration_cost_per_unit = decoration_total / quantity
+                decoration_total = (deco_cost_per_unit * quantity) + setup_cost_total
+                decoration_cost_per_unit = decoration_total / quantity
 
-            all_in_unit_cost = unit_price + decoration_cost_per_unit
-            final_unit_price = all_in_unit_cost / Decimal('0.70')
+                all_in_unit_cost = unit_price + decoration_cost_per_unit
+                final_unit_price = all_in_unit_cost / Decimal('0.70')
 
-        else:
-            print("[DEBUG] Unbranded: skipping decoration")
-            deco_unit_price = Decimal('0.00')
-            placements = 0
-            setup_fee = Decimal('0.00')
-            deco_cost_per_unit = Decimal('0.00')
-            setup_cost_total = Decimal('0.00')
-            decoration_total = Decimal('0.00')
-            all_in_unit_cost = unit_price
-            final_unit_price = all_in_unit_cost / Decimal('0.70')
+            else:
+                print("[DEBUG] Unbranded: skipping decoration")
+                deco_unit_price = Decimal('0.00')
+                placements = 0
+                setup_fee = Decimal('0.00')
+                deco_cost_per_unit = Decimal('0.00')
+                setup_cost_total = Decimal('0.00')
+                decoration_total = Decimal('0.00')
+                all_in_unit_cost = unit_price
+                final_unit_price = all_in_unit_cost / Decimal('0.70')
 
-        final_unit_price = final_unit_price.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
-        total_quote = (final_unit_price * quantity).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+            final_unit_price = final_unit_price.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+            total_quote = (final_unit_price * quantity).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
 
-        print(f"[DEBUG] total_quote = {total_quote}")
-
+        Quotation.objects.create(
+            quote_request=quote,
+            quote_number=f"Q-{uuid.uuid4().hex[:8].upper()}",
+            quantity=str(quantity),
+            quote_status='pending',
+            decoration_requested=quote.decoration_requested,
+            base_unit_price=str(unit_price),
+            decoration_unit_price=str(deco_unit_price),
+            no_placement=str(placements),
+            setup_fee=str(setup_fee),
+            total_decoration_cost=str(deco_cost_per_unit.quantize(Decimal('0.01'))),
+            total_setup_cost=str(setup_cost_total.quantize(Decimal('0.01'))),
+            decoration_total=str(decoration_total.quantize(Decimal('0.01'))),
+            all_in_unit_cost=str(all_in_unit_cost.quantize(Decimal('0.01'))),
+            final_unit_cost=str(final_unit_price),
+            total_cost=str(total_quote)
+        )
+        
+        quote.quote_status = 'generated'
+        quote.save()
+        
         return JsonResponse({
             "base_unit_price": str(unit_price),
             "decoration_unit_price": str(deco_unit_price),
@@ -797,105 +818,108 @@ def generate_quote(request):
         print("[ERROR] Exception in generate_quote:", str(e))
         return JsonResponse({"error": "Internal server error", "detail": str(e)}, status=500)
     
+
 def create_quotation_from_request(quote_request: QuoteRequest):
-    # same logic as before, just reused
-    product_id = quote_request.product_id
-    quantity = int(quote_request.quantity or 0)
-    logo_colours = int(quote_request.logo_colours or 0)
-    total_logos = int(quote_request.total_logos or 0)
-    decoration_mode_id = int(quote_request.decoration_mode_id or 0)
+    try:
+        product_id = quote_request.product_id
+        quantity = int(quote_request.quantity or 0)
+        logo_colours = int(quote_request.logo_colours or 0)
+        total_logos = int(quote_request.total_logos or 0)
+        decoration_mode_id = int(quote_request.decoration_mode_id or 0)
 
-    wc_url = f"https://fastpromos.com.au/wp-json/wc/v3/products/{product_id}"
-    params = {
-        "consumer_key": "ck_e09f6c58914214b8eaa293bc43ae95a51fc2f889",
-        "consumer_secret": "cs_34bc648cbce3c811bf1309c6197da57e82e6f91b"
-    }
+        wc_url = f"https://fastpromos.com.au/wp-json/wc/v3/products/{product_id}"
+        params = {
+            "consumer_key": "ck_e09f6c58914214b8eaa293bc43ae95a51fc2f889",
+            "consumer_secret": "cs_34bc648cbce3c811bf1309c6197da57e82e6f91b"
+        }
 
-    response = requests.get(wc_url, params=params)
-    if response.status_code != 200:
-        raise Exception(f"Error fetching product data. Status: {response.status_code}")
+        response = requests.get(wc_url, params=params)
+        response.raise_for_status()
+        product_data = response.json()
+        meta_data = product_data.get("meta_data", [])
 
-    product_data = response.json()
-    meta_data = product_data.get("meta_data", [])
+        fp_pricing = None
+        fp_additional_costs = None
 
-    fp_pricing = None
-    fp_additional_costs = None
+        for meta in meta_data:
+            if meta.get("key") == "fp_pricing":
+                fp_pricing = meta.get("value")
+            if meta.get("key") == "fp_additional_costs":
+                fp_additional_costs = meta.get("value")
 
-    for meta in meta_data:
-        if meta.get("key") == "fp_pricing":
-            fp_pricing = meta.get("value")
-        if meta.get("key") == "fp_additional_costs":
-            fp_additional_costs = meta.get("value")
+        if not fp_pricing:
+            raise ValueError("No pricing found in product metadata.")
 
-    if not fp_pricing:
-        raise Exception("No pricing found in product metadata.")
+        unit_price = None
+        breaks = sorted(map(int, fp_pricing.keys()))
+        for b in breaks:
+            if quantity >= b:
+                unit_price = Decimal(str(fp_pricing[str(b)]))
+        if not unit_price:
+            unit_price = Decimal(str(fp_pricing[str(breaks[0])]))
 
-    unit_price = None
-    breaks = sorted(map(int, fp_pricing.keys()))
-    for b in breaks:
-        if quantity >= b:
-            unit_price = Decimal(str(fp_pricing[str(b)]))
-    if not unit_price:
-        unit_price = Decimal(str(fp_pricing[str(breaks[0])]))
+        # Decoration Cost Calculations
+        if quote_request.decoration_requested and decoration_mode_id:
+            selected_deco = next(
+                (deco for deco in fp_additional_costs if deco["id"] == decoration_mode_id),
+                None
+            )
+            if not selected_deco:
+                raise ValueError("No matching decoration option found.")
 
-    if quote_request.decoration_requested and decoration_mode_id:
-        selected_deco = next(
-            (deco for deco in fp_additional_costs if deco["id"] == decoration_mode_id),
-            None
+            deco_unit_price = Decimal(str(selected_deco["unit_price"]))
+            setup_fee = Decimal(str(selected_deco["setup"]))
+
+            placements = logo_colours * total_logos
+            if placements == 0 and total_logos > 0:
+                placements = total_logos
+            if placements == 0:
+                placements = 1
+
+            deco_cost_per_unit = deco_unit_price * placements
+            setup_cost_total = setup_fee * placements
+
+            decoration_total = (deco_cost_per_unit * quantity) + setup_cost_total
+            decoration_cost_per_unit = decoration_total / quantity
+
+            all_in_unit_cost = unit_price + decoration_cost_per_unit
+        else:
+            deco_unit_price = Decimal('0.00')
+            placements = 0
+            setup_fee = Decimal('0.00')
+            deco_cost_per_unit = Decimal('0.00')
+            setup_cost_total = Decimal('0.00')
+            decoration_total = Decimal('0.00')
+            all_in_unit_cost = unit_price
+
+        # Add 30% margin
+        final_unit_price = (all_in_unit_cost / Decimal('0.70')).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+        total_quote = (final_unit_price * quantity).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+
+        quotation = Quotation.objects.create(
+            quote_request=quote_request,
+            quote_number=f"Q-{uuid.uuid4().hex[:8].upper()}",
+            quantity=str(quantity),
+            quote_status='pending',
+            decoration_requested=quote_request.decoration_requested,
+            base_unit_price=str(unit_price),
+            decoration_unit_price=str(deco_unit_price),
+            no_placement=str(placements),
+            setup_fee=str(setup_fee),
+            total_decoration_cost=str(deco_cost_per_unit.quantize(Decimal('0.01'))),
+            total_setup_cost=str(setup_cost_total.quantize(Decimal('0.01'))),
+            decoration_total=str(decoration_total.quantize(Decimal('0.01'))),
+            all_in_unit_cost=str(all_in_unit_cost.quantize(Decimal('0.01'))),
+            final_unit_cost=str(final_unit_price),
+            total_cost=str(total_quote)
         )
-        if not selected_deco:
-            raise Exception("No matching decoration option found.")
 
-        deco_unit_price = Decimal(str(selected_deco["unit_price"]))
-        setup_fee = Decimal(str(selected_deco["setup"]))
+        return quotation
 
-        placements = logo_colours * total_logos
-        if placements == 0 and total_logos > 0:
-            placements = total_logos
-        if placements == 0:
-            placements = 1
+    except Exception as e:
+        print(f"Error creating quotation for request ID {quote_request.id}: {e}")
+        raise e
 
-        deco_cost_per_unit = deco_unit_price * placements
-        setup_cost_total = setup_fee * placements
-
-        decoration_total = (deco_cost_per_unit * quantity) + setup_cost_total
-        decoration_cost_per_unit = decoration_total / quantity
-
-        all_in_unit_cost = unit_price + decoration_cost_per_unit
-        final_unit_price = all_in_unit_cost / Decimal('0.70')
-    else:
-        deco_unit_price = Decimal('0.00')
-        placements = 0
-        setup_fee = Decimal('0.00')
-        deco_cost_per_unit = Decimal('0.00')
-        setup_cost_total = Decimal('0.00')
-        decoration_total = Decimal('0.00')
-        all_in_unit_cost = unit_price
-        final_unit_price = all_in_unit_cost / Decimal('0.70')
-
-    final_unit_price = final_unit_price.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
-    total_quote = (final_unit_price * quantity).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
-
-    # Save the quotation
-    quotation = Quotation.objects.create(
-        quote_request=quote_request,
-        quote_number=f"Q-{uuid.uuid4().hex[:8].upper()}",
-        quantity=str(quantity),
-        quote_status='pending',
-        decoration_requested=quote_request.decoration_requested,
-        base_unit_price=str(unit_price),
-        decoration_unit_price=str(deco_unit_price),
-        no_placement=str(placements),
-        setup_fee=str(setup_fee),
-        total_decoration_cost=str(deco_cost_per_unit.quantize(Decimal('0.01'))),
-        total_setup_cost=str(setup_cost_total.quantize(Decimal('0.01'))),
-        decoration_total=str(decoration_total.quantize(Decimal('0.01'))),
-        all_in_unit_cost=str(all_in_unit_cost.quantize(Decimal('0.01'))),
-        final_unit_cost=str(final_unit_price),
-        total_cost=str(total_quote)
-    )
-
-    return quotation
 
 def generate_pending_quotations(request):
     try:
@@ -915,13 +939,27 @@ def generate_pending_quotations(request):
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
     
-
 def send_quotes(request):
     if request.method == 'POST':
-        quotations = Quotation.objects.filter(quote_status='pending')
+        try:
+            data = json.loads(request.body or '{}')
+        except Exception as e:
+            return JsonResponse({"error": f"Invalid JSON: {e}"}, status=400)
+
+        print('data==',data)
+        quote_id = data.get("id")
+
+        if quote_id:
+            # Send specific quote
+            quotations = Quotation.objects.filter(quote_request_id=quote_id, quote_status='pending')
+        else:
+            # Send all pending quotes
+            quotations = Quotation.objects.filter(quote_status='pending')
 
         success_count = 0
         failed = []
+
+        print('quotations==',quotations)
 
         for quote in quotations:
             payload = {
