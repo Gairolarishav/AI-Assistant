@@ -41,7 +41,9 @@
 
         <div style="margin-top:30px; text-align:right;">
             <button type="button" onclick="closeModal('modal-{{ obj.id }}')">Close</button>
+            {% if obj.quote_status == 'not generated' %}
             <button type="button" id="generate-quote-btn-{{ obj.id }}" onclick="generateQuote('{{ obj.id }}')">Generate Quote</button>
+            {% endif %}
         </div>
     </div>
 </div>
@@ -80,7 +82,7 @@
 
         <div style="margin-top:30px; text-align:right;">
             <button type="button" onclick="closeModal('generated-quote-modal-{{ obj.id }}')">Close</button>
-            <button type="button" onclick="approveAndSend('{{ obj.id }}')">Approve & Send</button>
+            <button type="button" id="approve-quote-btn-{{ obj.id }}" onclick="approveAndSend('{{ obj.id }}')">Approve & Send</button>
         </div>
     </div>
 </div>
@@ -239,21 +241,55 @@
     }
 
     function approveAndSend(quoteId) {
-        // Example: send POST to your approve endpoint
-        fetch(`/approve-quote/`, {
-            method: "POST",
-            headers: {'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}'},
-            body: JSON.stringify({ id: quoteId })
+        const approveQuoteBtn = document.getElementById(`approve-quote-btn-${quoteId}`);
+        const originalText = approveQuoteBtn.innerText;
+        
+        // Show loading state
+        approveQuoteBtn.innerText = 'Sending...';
+        approveQuoteBtn.disabled = true;
+        approveQuoteBtn.style.opacity = '0.6';
+        approveQuoteBtn.style.cursor = 'not-allowed';
+
+        const send_quotes = "{% url 'send_quotes' %}";
+        fetch(send_quotes, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')  // Ensure CSRF is handled
+            },
+            body: JSON.stringify({ id: quoteId })  // Send ID if needed
         })
         .then(response => response.json())
         .then(data => {
             alert('Quote approved and sent!');
-            closeModal(`generated-quote-modal-${quoteId}`);
-            closeModal(`modal-${quoteId}`);
+            location.reload();
         })
         .catch(err => {
-            console.error(err);
+            // Reset button state on error
+            approveQuoteBtn.innerText = originalText;
+            approveQuoteBtn.disabled = false;
+            approveQuoteBtn.style.opacity = '1';
+            approveQuoteBtn.style.cursor = 'pointer';
+            
             alert('Something went wrong.');
+            console.error(err);
         });
     }
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.startsWith(name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+
 </script>
