@@ -51,6 +51,30 @@ class QuoteRequest(models.Model):
     class Meta:
         verbose_name = "Quote Request"
 
+class Quotation(models.Model):
+    quote_request = models.ForeignKey(
+        'QuoteRequest',
+        on_delete=models.CASCADE,
+        related_name='quotations',
+        verbose_name="Related Quote Request"
+    )
+    quote_number = models.CharField(max_length=50, unique=True, verbose_name="Quote Number")
+    quantity = models.CharField(max_length=255, verbose_name="Quantity")
+    quote_status = models.CharField(max_length=100, default='pending', verbose_name="Quote Status")
+    decoration_requested = models.BooleanField(default=False, verbose_name="Decoration Requested")
+    base_unit_price = models.CharField(max_length=255, verbose_name="Base Unit Price")
+    decoration_unit_price = models.CharField(max_length=255, blank=True, null=True, verbose_name="Decoration Unit Price")
+    no_placement = models.CharField(max_length=255, blank=True, null=True, verbose_name="Total Placement")
+    setup_fee = models.CharField(max_length=255, blank=True, null=True, verbose_name="Decoration Setup Fee")
+    total_decoration_cost = models.CharField(max_length=255, blank=True, null=True, verbose_name="Total Decoration Cost")
+    total_setup_cost = models.CharField(max_length=255, blank=True, null=True, verbose_name="Total Setup Cost")
+    decoration_total = models.CharField(max_length=255, blank=True, null=True, verbose_name="Decoration/Setup Total")
+    all_in_unit_cost = models.CharField(max_length=255, verbose_name="All In Unit Cost")
+    final_unit_cost = models.CharField(max_length=255,verbose_name="Final Unit Cost")
+    total_cost = models.CharField(max_length=255, verbose_name="Total Cost")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Created At")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Updated At")
+
 class FAQ(models.Model):
     question = models.TextField()
     answer = models.TextField()
