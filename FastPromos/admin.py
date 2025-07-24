@@ -6,6 +6,7 @@ from datetime import timedelta
 from django.contrib.auth.models import User, Group
 from django.contrib.auth.admin import UserAdmin, GroupAdmin
 from django.template.loader import render_to_string
+from django.urls import reverse
 
 class MyAdminSite(admin.AdminSite):
 
@@ -45,7 +46,6 @@ custom_admin_site = MyAdminSite(name='myadmin')
 custom_admin_site.register(User, UserAdmin)
 custom_admin_site.register(Group, GroupAdmin)
 
-# @admin.register(ChatConversations)
 class ChatConversationsAdmin(admin.ModelAdmin):
     list_display = ('id', 'short_chat','quote_requested', 'view_transcript','created_at')
     # search_fields = ('id',)
@@ -84,8 +84,6 @@ class ChatConversationsAdmin(admin.ModelAdmin):
         )
     view_transcript.short_description = 'View Transcription'
 
-
-# @admin.register(VoiceConversations)
 class VoiceConversationsAdmin(admin.ModelAdmin):
     list_display = ('id', 'duration', 'quote_requested', 'created_at')
     # search_fields = ('id', 'duration')
@@ -99,19 +97,12 @@ class VoiceConversationsAdmin(admin.ModelAdmin):
     def has_change_permission(self, request, obj=None):
         return False  # no edit
 
-from django.urls import reverse
-
-# @admin.register(QuoteRequest)
 class QuoteRequestAdmin(admin.ModelAdmin):
     list_display = (
         'id', 'chat_id_column' ,'name', 'email', 'phone_no','post_code','product_name',
-        'delivery_time','quote_status_badge','view_more_column', 
-        
+        'delivery_time','quote_status_badge','view_more_column','view_quotation_column'   
     )
-
-    list_display_links = ('chat_id_column',)  # Only 'name' will be clickable
-    # search_fields = ('id', 'name', 'email', 'phone_no')
-    # list_filter = ('quote_status', 'decoration_requested', 'created_at')
+    # list_display_links = ('chat_id_column',)  # Only 'name' will be clickable
     readonly_fields = ('created_at', 'updated_at')
 
     def chat_id_column(self, obj):
@@ -129,8 +120,8 @@ class QuoteRequestAdmin(admin.ModelAdmin):
         status = obj.quote_status.lower()
         colors = {
             'pending': 'orange',
-            'approved': 'green',
-            'rejected': 'red',
+            'generated': 'green',
+            'not generated': 'red',
             'in progress': 'blue',
             # add more statuses if needed
         }
@@ -145,7 +136,74 @@ class QuoteRequestAdmin(admin.ModelAdmin):
     
     def view_more_column(self, obj):
         return render_to_string("admin/quote_request_modal.html", {"obj": obj})
-    view_more_column.short_description = "Actions"
+    view_more_column.short_description = "More"
+    
+    def view_quotation_column(self, obj):
+        return render_to_string("admin/quotation_modal.html", {"obj": obj})
+    view_quotation_column.short_description = "Quotation"
+
+    def has_add_permission(self, request):
+        return False  # no add, only edit existing
+
+from django.http import HttpResponseRedirect
+from django.contrib import messages
+class QuotationAdmin(admin.ModelAdmin):
+    change_list_template = "admin/quotations_changelist.html"
+    list_display = (
+        'id', 'quote_request_id_column' ,'quote_number', 'quantity', 'quote_status_badge','decoration_requested','base_unit_price',
+        'decoration_unit_price','no_placement','setup_fee', 'total_decoration_cost','total_setup_cost','decoration_total'
+        ,'all_in_unit_cost','final_unit_cost','total_cost'
+        
+    )
+    readonly_fields = ('created_at', 'updated_at')
+
+    def quote_request_id_column(self, obj):
+        if obj.quote_request_id:
+            # Build link to changelist with filter
+            url = (
+                reverse('admin:FastPromos_quoterequest_changelist')
+                + f"?id__exact={obj.quote_request_id}"
+            )
+            return format_html('<a href="{}">{}</a>', url, obj.quote_request_id)
+        return "-"
+    quote_request_id_column.short_description = "Quote Request ID"
+    
+    def view_more_column(self, obj):
+        return render_to_string("admin/quote_request_modal.html", {"obj": obj})
+    view_more_column.short_description = "More"
+
+    def changelist_view(self, request, extra_context=None):
+        if 'generate' in request.GET:
+            pending_requests = QuoteRequest.objects.filter(quote_status='not generated')
+            created = []
+            for qr in pending_requests:
+                create_quotation_from_request(qr)
+                qr.quote_status = 'generated'
+                qr.save()
+                created.append(qr.id)
+
+            self.message_user(request, f"✅ Created {len(created)} quotations.")
+            return HttpResponseRedirect(request.path)
+
+        return super().changelist_view(request, extra_context=extra_context)
+    
+    def quote_status_badge(self, obj):
+        status = obj.quote_status.lower()
+        colors = {
+            'pending': 'orange',
+            'sent': 'green',
+            'not generated': 'red',
+            'in progress': 'blue',
+            # add more statuses if needed
+        }
+        color = colors.get(status, 'gray')
+        return format_html(
+            '<span style="background-color:{}; color:white; padding:2px 6px; border-radius:4px; font-weight:bold;">{}</span>',
+            color,
+            obj.quote_status.capitalize()
+        )
+    quote_status_badge.short_description = "Quote Status"
+    quote_status_badge.admin_order_field = 'quote_status'
 
     def has_add_permission(self, request):
         return False  # no add, only edit existing
@@ -154,3 +212,4 @@ class QuoteRequestAdmin(admin.ModelAdmin):
 custom_admin_site.register(ChatConversations, ChatConversationsAdmin)
 custom_admin_site.register(VoiceConversations, VoiceConversationsAdmin)
 custom_admin_site.register(QuoteRequest, QuoteRequestAdmin)
+custom_admin_site.register(Quotation, QuotationAdmin)
