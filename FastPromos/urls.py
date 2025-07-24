@@ -1,5 +1,5 @@
 from django.urls import path,include
-from .views import voiceflow_webhook,quote_request,send_quotes,fetch_voiceflow_ready_products,add_faqs,upload_faqs_to_voiceflow,FAQViewSet,save_chat,chatbot,get_transcript,generate_quote,generate_pending_quotations,get_quotation_details
+from .views import quote_request,send_quotes,fetch_voiceflow_ready_products,add_faqs,upload_faqs_to_voiceflow,FAQViewSet,save_chat,chatbot,get_transcript,generate_quote,generate_pending_quotations,get_quotation_details
 from rest_framework.routers import DefaultRouter
 
 router = DefaultRouter()
