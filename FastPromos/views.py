@@ -186,7 +186,7 @@ def voiceflow_webhook(request):
             url = f"https://api.voiceflow.com/v2/transcripts/{project_id}?range=Today"
             headers = {
                 "accept": "application/json",
-                "Authorization": "VF.DM.687f60b8ab2bda9b4318acde.c0qzjRS3ZunAkZTA"
+                "Authorization": settings.VOICE_VOICEFLOW_API_KEY
             }
 
             response = requests.get(url, headers=headers)
