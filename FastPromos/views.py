@@ -106,7 +106,139 @@ def save_chat(request):
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
         
+def extract_messages_and_sessions(webhook_data):
+    """
+    Extracts a flat list of user and assistant messages from Voiceflow webhook data.
+    Adds 'New Chat session started' only when a new session starts (except for the first).
+    """
+    import json
 
+    if isinstance(webhook_data, str):
+        try:
+            events = json.loads(webhook_data)
+        except Exception:
+            return {"error": "Invalid JSON"}
+    else:
+        events = webhook_data
+
+    messages = []
+    current_session = None
+    first_session = True
+
+    for event in events:
+        session_id = event.get('turnID')
+        event_type = event.get('type')
+        payload = event.get('payload', {})
+        start_time = event.get('startTime')
+
+        # Only insert "New Chat session started" if session changes (not first)
+        if event_type == 'launch' and current_session != session_id:
+            if not first_session:
+                messages.append({
+                    'source': 'system',
+                    'text': '------ New Chat Session Started ------',
+                    'timestamp': start_time,
+                })
+            current_session = session_id
+            first_session = False
+
+        if event_type == 'text':
+            message_text = payload.get('payload', {}).get('message', '')
+            if message_text:
+                messages.append({
+                    'source': 'assistant',
+                    'text': message_text,
+                    'timestamp': start_time,
+                })
+
+        elif event_type == 'request':
+            user_query = payload.get('payload', {}).get('query', '')
+            if user_query:
+                messages.append({
+                    'source': 'user',
+                    'text': user_query,
+                    'timestamp': start_time,
+                })
+
+    return messages
+
+
+@csrf_exempt
+@require_POST
+def voiceflow_webhook(request):
+    """
+    Main webhook endpoint for receiving Voiceflow Call Events
+    """
+    try:
+        # Parse incoming JSON data
+        webhook_data = json.loads(request.body.decode('utf-8'))
+
+        events = webhook_data.get('type', [])
+        
+        if events == 'runtime.call.end':
+            data = webhook_data.get('data', {})
+
+            user_id = data.get('userID')
+            project_id = data.get('projectID')
+            platform = data.get('platform')
+
+            # Fetch transcript from Voiceflow transcript API
+            url = f"https://api.voiceflow.com/v2/transcripts/{project_id}?range=Today"
+            headers = {
+                "accept": "application/json",
+                "Authorization": "VF.DM.687f60b8ab2bda9b4318acde.c0qzjRS3ZunAkZTA"
+            }
+
+            response = requests.get(url, headers=headers)
+            if response.status_code == 200:
+                transcripts = response.json()  # Or store it in DB
+                # transcripts is your full list
+                matching_item = next((item for item in transcripts if item.get('sessionID') == user_id), None)
+
+                if matching_item:
+                    matching_id = matching_item.get('_id')
+                    url = f"https://api.voiceflow.com/v2/transcripts/{project_id}/{matching_id}"
+
+                    headers = {
+                        "accept": "application/json",
+                        "Authorization": settings.VOICE_VOICEFLOW_API_KEY
+                    }
+
+                    response = requests.get(url, headers=headers)
+                    if response.status_code == 200:
+                        chat_data  = response.json()  # Or store it in DB
+                        extracted_data = extract_messages_and_sessions(chat_data)
+
+                        if platform == 'web-voice':
+                            obj, created = ChatConversations.objects.update_or_create(
+                                user_id=user_id,
+                                platform=platform,
+                                defaults={'chat': extracted_data}
+                            )
+                else:
+                    print("❌ No matching session found for user_id:", user_id)
+            else:
+                print(f'❌ Failed to fetch transcript: {response.status_code}', response.text)
+            
+            
+        response_data = {
+            'status': 'success',
+            'message': 'Webhook processed successfully'
+        }
+        
+        return JsonResponse(response_data, status=200)
+        
+    except json.JSONDecodeError:
+        print("Invalid JSON in webhook request")
+        return JsonResponse({'error': 'Invalid JSON format'}, status=400)
+    
+    except Exception as e:
+        print(f"Webhook processing error: {str(e)}")
+        return JsonResponse({
+            'error': 'Internal server error',
+            'message': str(e)
+        }, status=500)
+        
 def get_transcript(request):
     user_id = request.GET.get('user_id')
 
