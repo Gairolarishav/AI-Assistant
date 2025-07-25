@@ -4,10 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FastPromos Chat</title>
+    <style>
+        /* Position both widgets in bottom-right corner */
+        .f6dof85 {
+            height: 50px !important;
+            min-width: 50px !important;
+            width: 50px !important;
+        }
+    </style>
 </head>
 <body>
-    <div style="text-align: center; margin-top: 50vh; transform: translateY(-50%); color: #177bf3; font-size: x-large;">
-        Click the Chat icon in the bottom-right corner to start conversation with the FastPromos assistant
+    <div style="text-align: center; margin-top: 50vh; transform: translateY(-50%);">
+        Click on Chat icon in the bottom-right corner to start conversation with the FastPromos assistant
     </div>
 <script>
 (function(d, t) {
@@ -152,6 +160,23 @@
   v.type = "text/javascript"; 
   s.parentNode.insertBefore(v, s);
 })(document, 'script');
+
+(function(d, t) {
+      var v = d.createElement(t), s = d.getElementsByTagName(t)[0];
+      v.onload = function() {
+        window.voiceflow.chat.load({
+          verify: { projectID: '6882358c8962bd670e7b6b35' },
+          url: 'https://general-runtime.voiceflow.com',
+          versionID: 'production',
+          voice: {
+            url: "https://runtime-api.voiceflow.com"
+          }
+        });
+      }
+      v.src = "https://cdn.voiceflow.com/widget-next/bundle.mjs"; v.type = "text/javascript"; s.parentNode.insertBefore(v, s);
+  })(document, 'script');
+  
 </script>
+
 </body>
 </html>
