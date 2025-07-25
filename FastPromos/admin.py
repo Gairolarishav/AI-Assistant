@@ -48,7 +48,7 @@ custom_admin_site.register(User, UserAdmin)
 custom_admin_site.register(Group, GroupAdmin)
 
 class ChatConversationsAdmin(admin.ModelAdmin):
-    list_display = ('id', 'short_chat','quote_requested', 'view_transcript','created_at')
+    list_display = ('id', 'short_chat','quote_requested', 'view_transcript','platform','created_at')
     # search_fields = ('id',)
     # list_filter = ('quote_requested', 'created_at')
     list_display_links = None 
