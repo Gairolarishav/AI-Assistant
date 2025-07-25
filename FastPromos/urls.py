@@ -1,5 +1,5 @@
 from django.urls import path,include
-from .views import quote_request,send_quotes,fetch_voiceflow_ready_products,add_faqs,upload_faqs_to_voiceflow,FAQViewSet,save_chat,chatbot,get_transcript,generate_quote,generate_pending_quotations,get_quotation_details
+from .views import voiceflow_webhook,quote_request,send_quotes,fetch_voiceflow_ready_products,add_faqs,upload_faqs_to_voiceflow,FAQViewSet,save_chat,chatbot,get_transcript,generate_quote,generate_pending_quotations,get_quotation_details
 from rest_framework.routers import DefaultRouter
 
 router = DefaultRouter()
@@ -7,6 +7,7 @@ router.register(r'faqs', FAQViewSet, basename='faq')
 
 urlpatterns = [
     path('save-chat/', save_chat, name='save-chat'),
+    path('voiceflow-webhook/', voiceflow_webhook, name='voiceflow_webhook'),
     path('add-faqs/', add_faqs, name='add_faqs'),
     path('upload-faqs/', upload_faqs_to_voiceflow, name='upload_faqs_to_voiceflow'),
     path('upload-product-data/', fetch_voiceflow_ready_products),
