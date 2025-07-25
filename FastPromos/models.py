@@ -5,6 +5,7 @@ class ChatConversations(models.Model):
     user_id = models.CharField(max_length=255, verbose_name="User ID")
     chat = models.JSONField()  # entire session turns list
     quote_requested = models.BooleanField(default=False, verbose_name="Quote Requested")
+    platform = models.CharField(max_length=255, verbose_name="Platform",default='web-chat')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Created At")
 
     class Meta:
