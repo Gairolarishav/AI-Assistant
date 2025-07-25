@@ -45,7 +45,7 @@ class QuoteRequest(models.Model):
     colour_size = models.CharField(max_length=100, blank=True, null=True, verbose_name="Colour/Size")            
     colour_size_id = models.CharField(max_length=255,blank=True, null=True, verbose_name="Colour/Size ID")
     delivery_time =  models.CharField(max_length=255, blank=True, null=True, verbose_name="Delivery")     
-    quote_status = models.CharField(max_length=100, default='pending', verbose_name="Quote Status")
+    quote_status = models.CharField(max_length=100, default='not generated', verbose_name="Quote Status")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Created At")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Updated At")
 
