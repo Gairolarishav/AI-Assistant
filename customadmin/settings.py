@@ -28,6 +28,7 @@ from decouple import config
 SECRET_KEY = config('SECRET_KEY')  # No default! Force to be set.
 
 VOICEFLOW_API_KEY = config('VOICEFLOW_API_KEY', default='')
+VOICE_VOICEFLOW_API_KEY = config('VOICE_VOICEFLOW_API_KEY', default='')
 AUTH_TOKEN = config('AUTH_TOKEN', default='')
 CONSUMER_KEY = config('CONSUMER_KEY', default='')
 CONSUMER_SECRET = config('CONSUMER_SECRET', default='')
